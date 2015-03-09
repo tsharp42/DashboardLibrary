@@ -1,4 +1,4 @@
-#DashboardSender
+#DashboardLibrary
 An abstraction layer and associated test application to send vehicle information from racing/driving sims to a hardware dashboard mimicing that of a real vehicle.
 
 ##DashboardLibrary
