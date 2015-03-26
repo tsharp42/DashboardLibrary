@@ -12,5 +12,7 @@ namespace DashboardLibrary
         public float EngineRPMMax;
 
         public float SpeedMPH;
+
+        public bool ParkingBrake;
     }
 }
