@@ -24,14 +24,17 @@ namespace DashboardSender
         CommandMessenger.TransportLayer.SerialTransport serialTransport;
         CommandMessenger.CmdMessenger cmdMessenger;
 
+        int step = 0;
+
         bool issetup = false;
 
         enum Packets
         {
             Setup,
             DriveTrainHS,
-            DriveTrainLS,
             Lights,
+            General,
+            LowPriority
         }
 
 
@@ -70,14 +73,14 @@ namespace DashboardSender
 
         void dashProvider_OnDashUpdate(DashboardLibrary.DashboardData Data)
         {
-            lastData = Data;
-
+            if (lastData == null)
+                lastData = Data;
 
             // Build Setup Data
             if (!issetup)
             {
                 var SetupCommand = new CommandMessenger.SendCommand((int)Packets.Setup);
-                SetupCommand.AddArgument((short)lastData.DriveTrain.EngineRPMMax);
+                SetupCommand.AddArgument((short)Data.DriveTrain.EngineRPMMax);
 
                 cmdMessenger.SendCommand(SetupCommand);
 
@@ -86,19 +89,72 @@ namespace DashboardSender
 
             // Build Engine Data
             var DriveTrainHSCommand = new CommandMessenger.SendCommand((int)Packets.DriveTrainHS);
-            DriveTrainHSCommand.AddArgument((short)lastData.DriveTrain.EngineRPM);
-            DriveTrainHSCommand.AddArgument((short)lastData.DriveTrain.SpeedMPH);
+            DriveTrainHSCommand.AddArgument(Data.DriveTrain.EngineRPM);
+            DriveTrainHSCommand.AddArgument(Data.DriveTrain.SpeedMPH);
             cmdMessenger.SendCommand(DriveTrainHSCommand);
 
+            bool sendLights = false;
+            bool sendGeneral = false;
+            bool sendLowPriority = false;
+
+            if (Data.Lights.LeftIndicatorActive != lastData.Lights.LeftIndicatorActive)
+                sendLights = true;
+
+            if (Data.Lights.RightIndicatorActive != lastData.Lights.RightIndicatorActive)
+                sendLights = true;
+
+            if (Data.Lights.HighBeam != lastData.Lights.HighBeam)
+                sendLights = true;
+
             //Build Light Data
-            var LightsCommand = new CommandMessenger.SendCommand((int)Packets.Lights);
-            LightsCommand.AddArgument(lastData.Lights.LeftIndicatorActive);
-            LightsCommand.AddArgument(lastData.Lights.LeftIndicatorOn);
-            LightsCommand.AddArgument(lastData.Lights.RightIndicatorActive);
-            LightsCommand.AddArgument(lastData.Lights.RightIndicatorOn);
-            LightsCommand.AddArgument(lastData.Lights.LowBeam);
-            LightsCommand.AddArgument(lastData.Lights.HighBeam);
-            cmdMessenger.SendCommand(LightsCommand);
+            if (sendLights)
+            {
+                var LightsCommand = new CommandMessenger.SendCommand((int)Packets.Lights);
+                LightsCommand.AddArgument(Data.Lights.LeftIndicatorActive);
+                LightsCommand.AddArgument(Data.Lights.RightIndicatorActive);
+                LightsCommand.AddArgument(Data.Lights.HighBeam);
+                cmdMessenger.SendCommand(LightsCommand);
+            }
+
+            // General Data
+            if (Data.General.CruiseControl != lastData.General.CruiseControl)
+                sendGeneral = true;
+
+            if (Data.DriveTrain.ParkingBrake != lastData.DriveTrain.ParkingBrake)
+                sendGeneral = true;
+
+            if (sendGeneral)
+            {
+                var GeneralCommand = new CommandMessenger.SendCommand((int)Packets.General);
+                GeneralCommand.AddArgument(Data.General.CruiseControl);
+                GeneralCommand.AddArgument(Data.DriveTrain.ParkingBrake);
+                cmdMessenger.SendCommand(GeneralCommand);
+            }
+
+
+            //if (Data.General.GameTime.Minute != lastData.General.GameTime.Minute)
+                //sendLowPriority = true;
+
+            if (sendLowPriority)
+            {
+                //var GeneralCommand = new CommandMessenger.SendCommand((int)Packets.LowPriority);
+                //GeneralCommand.AddArgument(Data.General.GameTime.Hour);
+                //GeneralCommand.AddArgument(Data.General.GameTime.Minute);
+                //cmdMessenger.SendCommand(GeneralCommand);
+            }
+
+            System.Threading.Thread.Sleep(100);
+            lastData = Data;
+
+            if(step > 100)
+            {
+                step = 0;
+                issetup = false;
+            }
+
+
+
+            step++;
         }
 
         private void DebugTimer_Tick(object sender, EventArgs e)

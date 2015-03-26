@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace DashboardLibrary
 {
-    public class DashboardData
+    public class _General
     {
-        public _DriveTrain DriveTrain;
-        public _Lights Lights;
-        public _General General;
+        public bool CruiseControl;
+        public DateTime GameTime;
     }
 }

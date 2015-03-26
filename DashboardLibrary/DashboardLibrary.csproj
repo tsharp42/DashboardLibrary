@@ -43,6 +43,7 @@
     <Compile Include="_DriveTrain.cs" />
     <Compile Include="IDashboardDataProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="_General.cs" />
     <Compile Include="_Lights.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
